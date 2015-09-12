@@ -3,6 +3,13 @@
 
 BLEDevice ble;
 
+/*
+* The Beacon payload (encapsulated within the MSD advertising data structure)
+* has the following composition:
+* 128-Bit UUID = E2 0A 39 F4 73 F5 4B C4 A1 2F 17 D1 AD 07 A9 61
+* Major/Minor  = 0000 / 0000
+* Tx Power     = C8 (-56dB)
+*/
 const static uint8_t iBeaconPayload[] = {
 	0x4c, 0x00,
 	0x02,
@@ -15,18 +22,22 @@ const static uint8_t iBeaconPayload[] = {
 };
 
 
-const static char DEVICE_NAME[] = "iBeacon";
+const static char DEVICE_NAME[] = "my iBeacon";
 
 int main()
 {
+    /* Initialize BLE baselayer */
 	ble.init();
+
+    /* Set up iBeacon data*/
 	ble.accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
 	ble.accumulateAdvertisingPayload(GapAdvertisingData::MANUFACTURER_SPECIFIC_DATA, iBeaconPayload, sizeof(iBeaconPayload));
 	ble.accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME, (uint8_t *)DEVICE_NAME, sizeof(DEVICE_NAME));
 
-	// ble.setAdvertisingType(GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED);
+	ble.setAdvertisingType(GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED);
 
-	ble.setAdvertisingInterval(160);
+    /* Set advertising interval. Longer interval = longer battery life */
+    ble.setAdvertisingInterval(160); /* 100ms; in multiples of 0.625ms. */
 	ble.startAdvertising();
 
 	for(;;)
